@@ -1,8 +1,10 @@
 import { ArrowBack, Save } from '@mui/icons-material'
 import { Alert, Box, Button, IconButton, Snackbar, Toolbar, Typography } from '@mui/material'
 import { Link, useFetcher } from '@remix-run/react'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { AiChatButton } from '~/components/ai-chat/AiChatButton'
+import { AiChatPanel } from '~/components/ai-chat/AiChatPanel'
 import type { EditorField, FieldConfig, FieldType, SaveField } from '~/types/editor'
 import { FieldList } from './FieldList'
 import { FieldSettingsSidebar } from './FieldSettingsSidebar'
@@ -12,12 +14,14 @@ interface FormEditorProps {
   formId: string
   formTitle: string
   initialFields: EditorField[]
+  hasAiKey: boolean
 }
 
-export function FormEditor({ formId, formTitle, initialFields }: FormEditorProps) {
+export function FormEditor({ formId, formTitle, initialFields, hasAiKey }: FormEditorProps) {
   const [fields, setFields] = useState<EditorField[]>(initialFields)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [snackOpen, setSnackOpen] = useState(false)
+  const [aiPanelOpen, setAiPanelOpen] = useState(false)
 
   const addFetcher = useFetcher<{ field: EditorField }>()
   const deleteFetcher = useFetcher()
@@ -47,21 +51,19 @@ export function FormEditor({ formId, formTitle, initialFields }: FormEditorProps
   }, [saveFetcher.state])
 
   function handleAddField(type: FieldType) {
-    addFetcher.submit(JSON.stringify({ intent: 'addField', type }), {
-      method: 'post',
-      encType: 'application/json',
-      action: `/admin/forms/${formId}/edit`,
-    })
+    addFetcher.submit(
+      { intent: 'addField', type },
+      { method: 'post', encType: 'application/json', action: `/admin/forms/${formId}/edit` }
+    )
   }
 
   function handleDeleteField(id: string) {
     setFields((prev) => prev.filter((f) => f.id !== id))
     if (selectedId === id) setSelectedId(null)
-    deleteFetcher.submit(JSON.stringify({ intent: 'deleteField', fieldId: id }), {
-      method: 'post',
-      encType: 'application/json',
-      action: `/admin/forms/${formId}/edit`,
-    })
+    deleteFetcher.submit(
+      { intent: 'deleteField', fieldId: id },
+      { method: 'post', encType: 'application/json', action: `/admin/forms/${formId}/edit` }
+    )
   }
 
   function handleMoveUp(id: string) {
@@ -92,12 +94,18 @@ export function FormEditor({ formId, formTitle, initialFields }: FormEditorProps
 
   function handleSave() {
     const payload: SaveField[] = fields.map((f) => ({ id: f.id, config: f.config, order: f.order }))
-    saveFetcher.submit(JSON.stringify({ intent: 'save', fields: payload }), {
-      method: 'post',
-      encType: 'application/json',
-      action: `/admin/forms/${formId}/edit`,
-    })
+    // Cast needed: Remix types expect Record<string,string> but encType:json accepts any object
+    saveFetcher.submit(
+      { intent: 'save', fields: payload } as unknown as Record<string, string>,
+      { method: 'post', encType: 'application/json', action: `/admin/forms/${formId}/edit` }
+    )
   }
+
+  // Called by AiChatPanel after fields are created in DB — appends and selects the first new one
+  const handleAiAddFields = useCallback((newFields: EditorField[]) => {
+    setFields((prev) => [...prev, ...newFields])
+    if (newFields.length > 0) setSelectedId(newFields[0].id)
+  }, [])
 
   const selectedField = fields.find((f) => f.id === selectedId) ?? null
 
@@ -170,6 +178,19 @@ export function FormEditor({ formId, formTitle, initialFields }: FormEditorProps
           <FieldSettingsSidebar field={selectedField} onChange={handleConfigChange} />
         </Box>
       </Box>
+
+      {/* AI FAB — only shown when OPENAI_API_KEY is configured */}
+      {hasAiKey && (
+        <>
+          <AiChatButton onClick={() => setAiPanelOpen(true)} />
+          <AiChatPanel
+            formId={formId}
+            open={aiPanelOpen}
+            onClose={() => setAiPanelOpen(false)}
+            onAddFields={handleAiAddFields}
+          />
+        </>
+      )}
 
       <Snackbar
         open={snackOpen}

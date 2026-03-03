@@ -3,7 +3,7 @@ import { json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
 import { FormEditor } from '~/components/form-editor/FormEditor'
-import { addField, deleteField, getFormWithFields, updateFields } from '~/models/fields.server'
+import { addField, addFieldsBatch, deleteField, getFormWithFields, updateFields } from '~/models/fields.server'
 import type { EditorField, FieldConfig, FieldType, SaveField } from '~/types/editor'
 import { requireUserId } from '~/utils/session.server'
 
@@ -23,13 +23,18 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     config: f.config as unknown as FieldConfig,
   }))
 
-  return json({ form: { id: form.id, title: form.title }, fields })
+  return json({
+    form: { id: form.id, title: form.title },
+    fields,
+    hasAiKey: !!process.env.OPENAI_API_KEY,
+  })
 }
 
 type ActionBody =
   | { intent: 'addField'; type: FieldType }
   | { intent: 'deleteField'; fieldId: string }
   | { intent: 'save'; fields: SaveField[] }
+  | { intent: 'addFieldsBatch'; fields: Array<{ type: FieldType; config: FieldConfig }> }
 
 export async function action({ request, params }: ActionFunctionArgs) {
   await requireUserId(request)
@@ -49,14 +54,25 @@ export async function action({ request, params }: ActionFunctionArgs) {
       await updateFields(body.fields)
       return json({ ok: true })
     }
+    case 'addFieldsBatch': {
+      const fields = await addFieldsBatch(formId, body.fields)
+      return json({ fields })
+    }
     default:
       return json({ error: 'Unknown intent' }, { status: 400 })
   }
 }
 
 export default function EditFormPage() {
-  const { form, fields } = useLoaderData<typeof loader>()
-  return <FormEditor formId={form.id} formTitle={form.title} initialFields={fields} />
+  const { form, fields, hasAiKey } = useLoaderData<typeof loader>()
+  return (
+    <FormEditor
+      formId={form.id}
+      formTitle={form.title}
+      initialFields={fields}
+      hasAiKey={hasAiKey}
+    />
+  )
 }
 
 export function ErrorBoundary() {

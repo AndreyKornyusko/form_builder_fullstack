@@ -1,6 +1,6 @@
 # Spec 06 — Database Schema
 
-## Status: READY TO IMPLEMENT
+## Status: IMPLEMENTED
 
 ## Prisma Schema
 
@@ -53,7 +53,7 @@ model FormSubmission {
 - 1 sample published form with 2–3 fields
 
 ## Acceptance Criteria
-- [ ] `yarn db:push` runs without errors
-- [ ] `yarn db:seed` creates admin user + sample form
-- [ ] All relations cascade delete correctly
-- [ ] Prisma client generates without TypeScript errors
+- [x] `yarn db:push` runs without errors
+- [x] `yarn db:seed` creates admin user + sample form
+- [x] All relations cascade delete correctly
+- [x] Prisma client generates without TypeScript errors

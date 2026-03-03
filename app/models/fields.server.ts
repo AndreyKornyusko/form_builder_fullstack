@@ -64,3 +64,26 @@ export async function updateFields(fields: SaveField[]): Promise<void> {
     )
   )
 }
+
+export async function addFieldsBatch(
+  formId: string,
+  items: Array<{ type: FieldType; config: FieldConfig }>
+): Promise<EditorField[]> {
+  const agg = await db.formField.aggregate({ where: { formId }, _max: { order: true } })
+  let nextOrder = (agg._max.order ?? -1) + 1
+
+  const created = await db.$transaction(
+    items.map((item) =>
+      db.formField.create({
+        data: {
+          formId,
+          type: item.type,
+          order: nextOrder++,
+          config: item.config as unknown as Prisma.InputJsonValue,
+        },
+      })
+    )
+  )
+
+  return created.map(toEditorField)
+}
