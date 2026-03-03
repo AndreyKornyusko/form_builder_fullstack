@@ -36,7 +36,7 @@ The main admin editor screen. Split layout: field list + live preview + settings
 
 ## Right Sidebar — Field Settings
 - Shows settings for currently selected field
-- Empty state if no field selected: "Виберіть поле для налаштування"
+- Empty state if no field selected: "Select a field to configure"
 
 ### Text field settings
 - Label (text input, required)

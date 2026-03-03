@@ -29,6 +29,7 @@ Built with RemixJS + TypeScript + PostgreSQL + Prisma + MUI.
 - All server-side code in `*.server.ts` files (Remix convention)
 - Yup schemas defined in `app/utils/validation.ts`, reused on client and server
 - MUI components wrapped in local `app/components/ui/` if customized
+- All user-facing text in **English**
 
 ### Database
 - All DB access through Prisma client in `app/models/`

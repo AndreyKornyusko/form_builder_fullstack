@@ -1,3 +1,4 @@
+import { CacheProvider } from '@emotion/react'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import type { LinksFunction } from '@remix-run/node'
 import {
@@ -10,7 +11,11 @@ import {
   useRouteError,
 } from '@remix-run/react'
 
+import createEmotionCache from '~/utils/create-emotion-cache'
 import theme from '~/utils/theme'
+
+// Client-side cache — same key as server so hydration styles match
+const clientEmotionCache = createEmotionCache()
 
 export const links: LinksFunction = () => [
   { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
@@ -23,7 +28,7 @@ export const links: LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uk">
+    <html lang="en">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,10 +46,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Outlet />
-    </ThemeProvider>
+    <CacheProvider value={clientEmotionCache}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Outlet />
+      </ThemeProvider>
+    </CacheProvider>
   )
 }
 

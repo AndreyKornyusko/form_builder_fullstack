@@ -1,6 +1,6 @@
 # Spec 01 — Authentication
 
-## Status: READY TO IMPLEMENT
+## Status: IMPLEMENTED
 
 ## Scope
 Session-based auth for admin panel only. Single admin user (no registration).
@@ -44,8 +44,8 @@ export async function login(email: string, password: string): Promise<User | nul
 ## Login Page UI
 - MUI Card centered on page
 - Email + Password fields
-- Submit button "Увійти"
-- Error message if login fails: "Невірний email або пароль"
+- Submit button "Sign In"
+- Error message if login fails: "Invalid email or password"
 
 ## Yup Validation Schema
 ```typescript
@@ -61,8 +61,22 @@ Every admin route loader must call `requireUserId(request)`.
 Create a helper `app/utils/admin-guard.server.ts` that wraps this.
 
 ## Acceptance Criteria
-- [ ] Login with valid credentials → redirect to `/admin`
-- [ ] Login with invalid credentials → error shown on same page
-- [ ] Accessing `/admin/*` without session → redirect to `/auth/login`
-- [ ] Logout destroys session and redirects to `/auth/login`
-- [ ] Session persists across page refresh
+- [x] Login with valid credentials → redirect to `/admin`
+- [x] Login with invalid credentials → error shown on same page
+- [x] Accessing `/admin/*` without session → redirect to `/auth/login`
+- [x] Logout destroys session and redirects to `/auth/login`
+- [x] Session persists across page refresh
+
+## Implementation Notes
+
+### Files Created
+- `app/utils/session.server.ts` — sessionStorage + getSession / createUserSession / destroySession / requireUserId
+- `app/services/auth.server.ts` — login() via bcrypt.compare
+- `app/utils/admin-guard.server.ts` — re-exports requireUserId (imported by all admin routes)
+- `app/routes/auth.login.tsx` — login page + action + Yup validation
+- `app/routes/auth.logout.tsx` — POST destroys session, GET redirects to /auth/login
+
+### Notes
+- Login page loader redirects to /admin if already authenticated (no double login)
+- Field-level errors (email format, password length) returned separately from form error ("Invalid email or password")
+- requireUserId throws redirect — catches in loader via try/catch on login page

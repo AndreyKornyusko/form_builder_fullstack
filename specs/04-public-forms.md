@@ -42,16 +42,16 @@ export async function createSubmission(
 
 ## Public Form List UI (/)
 - MUI Grid of Cards
-- Card: title, description (truncated 2 lines), field count, "Заповнити форму" button
+- Card: title, description (truncated 2 lines), field count, "Fill Out Form" button
 - Only published forms shown
-- Empty state: "Наразі немає доступних форм"
+- Empty state: "No forms available at the moment"
 - No auth required
 
 ## Form Fill Page UI (/forms/:id)
 - Form title + description at top
 - Each field rendered by type (using field components)
-- "Надіслати" submit button
-- On success → show MUI Alert "Форму надіслано! Дякуємо." (replace form content)
+- "Submit" button
+- On success → show MUI Alert "Form submitted successfully! Thank you." (replace form content)
 - On error → show validation errors per field as `helperText`
 - Return 404 if form not found OR not published
 

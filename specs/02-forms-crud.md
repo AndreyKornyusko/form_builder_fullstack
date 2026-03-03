@@ -53,23 +53,23 @@ export async function publishForm(id: string): Promise<Form>
 
 ## Admin Dashboard UI (/admin)
 - MUI Table with columns: Title, Fields, Status chip, Created At, Actions
-- Status chip: "Опубліковано" (green) | "Чернетка" (default)
-- Actions per row: "Редагувати" button → `/admin/forms/:id/edit`, publish toggle IconButton, delete IconButton
-- Delete: confirm with browser `confirm()` or MUI Dialog
-- "Створити форму" button (top right)
-- Empty state: "Форм ще немає. Створіть першу!"
+- Status chip: "Published" (green) | "Draft" (default)
+- Actions per row: "Edit" button → `/admin/forms/:id/edit`, publish toggle IconButton, delete IconButton
+- Delete: confirm with MUI Dialog
+- "Create Form" button (top right)
+- Empty state: "No forms yet. Create your first one!"
 
 ## New Form Page UI (/admin/forms/new)
 - MUI Card centered layout
 - Title field (required, max 100 chars)
 - Description field (optional, multiline, max 500 chars)
-- "Скасувати" button → back to `/admin`
-- "Створити та перейти до редагування" submit → redirects to `/admin/forms/:id/edit`
+- "Cancel" button → back to `/admin`
+- "Create & Open Editor" submit → redirects to `/admin/forms/:id/edit`
 
 ## Yup Validation Schema
 ```typescript
 const formSchema = yup.object({
-  title: yup.string().trim().min(1, 'Обов\'язкове поле').max(100).required(),
+  title: yup.string().trim().min(1, 'Required').max(100).required(),
   description: yup.string().trim().max(500).optional(),
 })
 ```

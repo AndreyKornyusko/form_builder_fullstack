@@ -58,7 +58,7 @@ User: {description}
 export async function action({ request }: ActionFunctionArgs) {
   await requireUserId(request)
   const { description } = await request.json()
-  if (!OPENAI_API_KEY) return json({ error: 'AI не налаштовано' }, { status: 503 })
+  if (!OPENAI_API_KEY) return json({ error: 'AI not configured' }, { status: 503 })
   const fields = await generateFormFields(description)
   return json({ fields })
 }
@@ -66,11 +66,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 ## UI — AiChatPanel
 - MUI Drawer (anchor="right", width=380)
-- Header: "AI Генератор полів" + close button
-- Textarea: "Опишіть форму..." (multiline, rows=4)
-- "Згенерувати" button (loading state during request)
+- Header: "AI Field Generator" + close button
+- Textarea: "Describe the form you want to create..." (multiline, rows=4)
+- "Generate" button (loading state during request)
 - Generated fields shown as MUI List with field type icon + label
-- "Додати всі поля" button → calls `onAddFields(fields)` callback
+- "Add All Fields" button → calls `onAddFields(fields)` callback
 - Error shown as MUI Alert
 
 ## Integration with FormEditor

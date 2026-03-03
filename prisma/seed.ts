@@ -25,8 +25,8 @@ async function seed() {
   // Sample published form
   await prisma.form.create({
     data: {
-      title: "Зворотний зв'язок",
-      description: 'Будь ласка, поділіться вашими враженнями про наш сервіс',
+      title: 'Customer Feedback',
+      description: 'Please share your experience with our service',
       isPublished: true,
       fields: {
         create: [
@@ -34,8 +34,8 @@ async function seed() {
             type: 'text',
             order: 0,
             config: {
-              label: "Ім'я",
-              placeholder: "Введіть ваше ім'я",
+              label: 'Full Name',
+              placeholder: 'Enter your full name',
               required: true,
               minLength: 2,
               maxLength: 50,
@@ -45,7 +45,7 @@ async function seed() {
             type: 'number',
             order: 1,
             config: {
-              label: 'Оцінка (1–10)',
+              label: 'Rating (1–10)',
               required: true,
               min: 1,
               max: 10,
@@ -56,8 +56,8 @@ async function seed() {
             type: 'textarea',
             order: 2,
             config: {
-              label: 'Коментар',
-              placeholder: 'Напишіть ваш відгук...',
+              label: 'Comments',
+              placeholder: 'Write your feedback here...',
               required: false,
               rows: 4,
               maxLength: 1000,
@@ -67,7 +67,7 @@ async function seed() {
       },
     },
   })
-  console.log('  ✅ Sample form: "Зворотний зв\'язок" (published, 3 fields)')
+  console.log('  ✅ Sample form: "Customer Feedback" (published, 3 fields)')
 
   console.log('\n✨ Database seeded successfully!')
 }
