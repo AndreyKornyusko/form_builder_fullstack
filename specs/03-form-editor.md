@@ -1,6 +1,6 @@
 # Spec 03 — Form Editor
 
-## Status: READY TO IMPLEMENT
+## Status: IMPLEMENTED
 
 ## Scope
 The main admin editor screen. Split layout: field list + live preview + settings sidebar.
@@ -94,11 +94,22 @@ export async function reorderFields(formId: string, orderedIds: string[]): Promi
 ```
 
 ## Acceptance Criteria
-- [ ] Can add text / number / textarea fields
-- [ ] Clicking field in list selects it and opens correct settings sidebar
-- [ ] Clicking field in preview also selects it
-- [ ] Settings changes reflect in preview in real time
-- [ ] Can delete a field
-- [ ] Can reorder fields
-- [ ] Save persists to DB
-- [ ] Navigating away and back — fields preserved
+- [x] Can add text / number / textarea fields
+- [x] Clicking field in list selects it and opens correct settings sidebar
+- [x] Clicking field in preview also selects it
+- [x] Settings changes reflect in preview in real time
+- [x] Can delete a field
+- [x] Can reorder fields
+- [x] Save persists to DB
+- [x] Navigating away and back — fields preserved
+
+## Implementation Notes
+- **Add field**: fetcher POST → server creates DB record → returns EditorField with real ID → appended to local state
+- **Delete field**: removed from local state immediately + background fetcher POST to delete from DB
+- **Reorder**: up/down buttons update local state only; order is persisted on Save
+- **Config changes**: local state only (real-time preview); persisted on Save button click
+- **Save**: POSTs all fields with `{ id, config, order }` — updates config AND order in a single DB transaction
+- **Layout**: editor uses `height: calc(100vh - 64px)` to fill beneath admin AppBar; 3-column body is `flex: 1, overflow: hidden` with each column individually scrollable
+- **types/editor.ts**: shared FieldType, TextConfig, NumberConfig, TextareaConfig, EditorField, SaveField types
+- **models/fields.server.ts**: addField, deleteField, updateFields (replaces spec's reorderFields + updateFormFields)
+- `reorderFields` action removed; order is saved as part of the `save` intent along with configs

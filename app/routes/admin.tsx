@@ -12,12 +12,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function AdminLayout() {
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+    // overflow:hidden prevents double scrollbars; the editor route manages its own height
+    <Box sx={{ height: '100vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
       <AppBar
         position="static"
         color="default"
         elevation={0}
-        sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white' }}
+        sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'white', flexShrink: 0 }}
       >
         <Toolbar>
           <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
@@ -30,7 +31,10 @@ export default function AdminLayout() {
           </Form>
         </Toolbar>
       </AppBar>
-      <Outlet />
+      {/* Dashboard / new-form routes scroll normally; editor controls its own overflow */}
+      <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'grey.50' }}>
+        <Outlet />
+      </Box>
     </Box>
   )
 }
