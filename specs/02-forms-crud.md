@@ -1,6 +1,6 @@
 # Spec 02 — Forms CRUD (Admin)
 
-## Status: READY TO IMPLEMENT
+## Status: IMPLEMENTED
 
 ## Scope
 Admin panel CRUD for forms: list all, create new, delete, toggle publish status.
@@ -75,10 +75,17 @@ const formSchema = yup.object({
 ```
 
 ## Acceptance Criteria
-- [ ] Dashboard shows all forms with correct field/submission counts
-- [ ] Can create new form and get redirected to editor
-- [ ] Can delete form (with confirmation)
-- [ ] Can toggle publish status inline
-- [ ] Empty state shown when no forms
-- [ ] All admin routes protected by requireUserId
-- [ ] Validation errors shown on new form page
+- [x] Dashboard shows all forms with correct field/submission counts
+- [x] Can create new form and get redirected to editor
+- [x] Can delete form (with confirmation)
+- [x] Can toggle publish status inline
+- [x] Empty state shown when no forms
+- [x] All admin routes protected by requireUserId
+- [x] Validation errors shown on new form page
+
+## Implementation Notes
+- Delete and publish actions handled via `intent` field in `admin._index.tsx` action (single route, no extra resource routes)
+- `useFetcher` used for delete/publish so table updates without full navigation
+- `admin.tsx` added as shared layout — AppBar with "Form Builder" + "Logout" button wraps all `/admin/*` routes
+- `admin.forms.new.tsx` — centered Card layout (inherits AppBar from layout), `minHeight: calc(100vh - 64px)` to account for AppBar height
+- Submissions column added to dashboard table (not in original spec columns list but available from `_count`)
