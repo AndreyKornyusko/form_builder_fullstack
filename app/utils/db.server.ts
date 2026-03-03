@@ -1,0 +1,20 @@
+import { PrismaClient } from '@prisma/client'
+
+// Prevent multiple Prisma instances in development (hot reload creates new modules)
+declare global {
+  // eslint-disable-next-line no-var
+  var __db__: PrismaClient | undefined
+}
+
+let db: PrismaClient
+
+if (process.env.NODE_ENV === 'production') {
+  db = new PrismaClient()
+} else {
+  if (!global.__db__) {
+    global.__db__ = new PrismaClient()
+  }
+  db = global.__db__
+}
+
+export { db }
