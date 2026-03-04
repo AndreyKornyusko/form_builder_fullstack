@@ -1,6 +1,6 @@
 import { Alert, Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material'
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
-import { json } from '@remix-run/node'
+import { data } from '@remix-run/node'
 import { Form, Link, useActionData, useLoaderData, useNavigation } from '@remix-run/react'
 
 import { NumberField } from '~/components/form-fields/NumberField'
@@ -26,11 +26,11 @@ type LoaderData = {
   }
 }
 
-export async function loader({ params }: LoaderFunctionArgs): Promise<ReturnType<typeof json<LoaderData>>> {
+export async function loader({ params }: LoaderFunctionArgs) {
   const form = await getPublishedFormWithFields(params.id!)
   if (!form) throw new Response('Not Found', { status: 404 })
 
-  return json({
+  return {
     form: {
       id: form.id,
       title: form.title,
@@ -42,14 +42,14 @@ export async function loader({ params }: LoaderFunctionArgs): Promise<ReturnType
         config: f.config as unknown as FieldConfig,
       })),
     },
-  })
+  }
 }
 
 type ActionData =
   | { success: true; errors: Record<string, never>; values: Record<string, never> }
   | { success: false; errors: Record<string, string>; values: Record<string, string> }
 
-export async function action({ request, params }: ActionFunctionArgs): Promise<ReturnType<typeof json<ActionData>>> {
+export async function action({ request, params }: ActionFunctionArgs) {
   const form = await getPublishedFormWithFields(params.id!)
   if (!form) throw new Response('Not Found', { status: 404 })
 
@@ -72,11 +72,11 @@ export async function action({ request, params }: ActionFunctionArgs): Promise<R
   }
 
   if (Object.keys(errors).length > 0) {
-    return json({ success: false, errors, values }, { status: 400 })
+    return data({ success: false, errors, values }, { status: 400 })
   }
 
   await createSubmission(form.id, values)
-  return json({ success: true, errors: {}, values: {} })
+  return { success: true as const, errors: {}, values: {} }
 }
 
 export default function FormFillPage() {

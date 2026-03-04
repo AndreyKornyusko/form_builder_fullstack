@@ -29,7 +29,16 @@ Built with RemixJS + TypeScript + PostgreSQL + Prisma + MUI.
 - All server-side code in `*.server.ts` files (Remix convention)
 - Yup schemas defined in `app/utils/validation.ts`, reused on client and server
 - MUI components wrapped in local `app/components/ui/` if customized
-- All user-facing text in **English**
+
+### Language — English only
+**All project text must be in English.** This applies to:
+- All user-facing UI text and labels
+- All code comments
+- All documentation files (`docs/`, `specs/`, `.claude/`)
+- Commit messages and PR descriptions
+- Variable names, function names, error messages
+
+No Ukrainian, no mixed language. English only, everywhere.
 
 ### Database
 - All DB access through Prisma client in `app/models/`
@@ -112,4 +121,11 @@ Reference these before working on each area:
 - `.claude/skills/prisma-patterns.md` — singleton client, transactions, error codes
 - `.claude/skills/mui-v5-patterns.md` — layout patterns, form fields, Snackbar, Dialog
 - `.claude/skills/security.md` — auth guards, input validation, session config
+
+## Agent Architecture
+See `docs/AGENTS.md` for the full guide on:
+- Which agents exist and what they own
+- All slash commands with examples
+- Recommended workflow (implement → review-spec → tests → checks → commit)
+- How agents receive context and their limitations
 

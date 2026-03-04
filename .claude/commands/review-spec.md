@@ -1,30 +1,39 @@
 # /review-spec — Review Spec Against Implementation
 
-Review how well the implementation matches the spec. Usage: `/review-spec 01-auth`
+Spawn the `spec-checker` subagent to verify implementation compliance.
+Usage: `/review-spec 01-auth`
+
+---
 
 ## Steps
 
-1. Read `specs/$ARGUMENTS.md`
-2. For each Acceptance Criterion, check if it's implemented:
-   - Read the relevant source files
-   - Mark: ✅ implemented | ❌ missing | ⚠️ partial
-3. Check for deviations from spec (undocumented changes)
-4. Check code quality against `CLAUDE.md` conventions
-5. Output a summary report:
+1. Read `specs/$ARGUMENTS.md` completely
+2. Identify files related to this spec (read `## Implementation Notes` if present)
+3. Read all relevant source files
+4. Spawn the `spec-checker` subagent using the `Agent` tool:
 
 ```
-## Spec Review: $ARGUMENTS
+Agent(
+  subagent_type: "spec-checker",
+  prompt: "
+    Check compliance of the following spec against the implementation.
 
-### Acceptance Criteria
-- [x] Criterion 1 ✅
-- [ ] Criterion 2 ❌ — not implemented
-- [~] Criterion 3 ⚠️ — partial: missing X
+    SPEC (specs/$ARGUMENTS.md):
+    [paste full spec content here]
 
-### Deviations
-- ...
+    FILES TO CHECK:
+    [list all relevant file paths]
 
-### Code Quality Issues
-- ...
+    FILE CONTENTS:
+    [paste content of each file]
 
-### Overall: PASS / NEEDS WORK
+    Follow the process defined in your system prompt exactly.
+    Output the full compliance report.
+  "
+)
 ```
+
+5. Show the agent's compliance report to the user
+6. If **NEEDS WORK** or **BLOCKED**:
+   - List what needs to be fixed
+   - Ask the user whether to fix immediately or track as follow-up

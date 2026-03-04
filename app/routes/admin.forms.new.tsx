@@ -1,6 +1,6 @@
 import { Box, Button, Card, CardContent, Stack, TextField, Typography } from '@mui/material'
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
-import { json, redirect } from '@remix-run/node'
+import { data, redirect } from '@remix-run/node'
 import { Form, Link, useActionData, useNavigation } from '@remix-run/react'
 import * as yup from 'yup'
 
@@ -16,7 +16,7 @@ const formSchema = yup.object({
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireUserId(request)
-  return json({})
+  return {}
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -34,7 +34,7 @@ export async function action({ request }: ActionFunctionArgs) {
         (acc, e) => ({ ...acc, [e.path!]: e.message }),
         {} as Record<string, string>
       )
-      return json({ errors }, { status: 400 })
+      return data({ errors }, { status: 400 })
     }
   }
 

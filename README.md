@@ -1,6 +1,6 @@
 # Form Builder
 
-Система для створення та публікації форм з адмін-панеллю та AI-асистентом.
+A system for creating and publishing forms with an admin panel and an AI assistant.
 
 ## Tech Stack
 - RemixJS + TypeScript + Vite

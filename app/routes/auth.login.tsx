@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material'
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
-import { json, redirect } from '@remix-run/node'
+import { data, redirect } from '@remix-run/node'
 import { Form, useActionData, useNavigation } from '@remix-run/react'
 import * as yup from 'yup'
 
@@ -28,7 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
     await requireUserId(request)
     return redirect('/admin')
   } catch {
-    return json({})
+    return {}
   }
 }
 
@@ -45,13 +45,13 @@ export async function action({ request }: ActionFunctionArgs) {
         (acc, e) => ({ ...acc, [e.path!]: e.message }),
         {} as Record<string, string>
       )
-      return json({ errors, formError: null }, { status: 400 })
+      return data({ errors, formError: null }, { status: 400 })
     }
   }
 
   const user = await login(email, password)
   if (!user) {
-    return json({ errors: {}, formError: 'Invalid email or password' }, { status: 401 })
+    return data({ errors: {}, formError: 'Invalid email or password' }, { status: 401 })
   }
 
   return createUserSession(user.id, '/admin')

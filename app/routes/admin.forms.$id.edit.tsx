@@ -1,5 +1,4 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs, MetaFunction } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 
 import { FormEditor } from '~/components/form-editor/FormEditor'
@@ -23,11 +22,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     config: f.config as unknown as FieldConfig,
   }))
 
-  return json({
+  return {
     form: { id: form.id, title: form.title },
     fields,
     hasAiKey: !!process.env.OPENAI_API_KEY,
-  })
+  }
 }
 
 type ActionBody =
@@ -44,22 +43,22 @@ export async function action({ request, params }: ActionFunctionArgs) {
   switch (body.intent) {
     case 'addField': {
       const field = await addField(formId, body.type)
-      return json({ field })
+      return { field }
     }
     case 'deleteField': {
       await deleteField(body.fieldId)
-      return json({ ok: true })
+      return { ok: true }
     }
     case 'save': {
       await updateFields(body.fields)
-      return json({ ok: true })
+      return { ok: true }
     }
     case 'addFieldsBatch': {
       const fields = await addFieldsBatch(formId, body.fields)
-      return json({ fields })
+      return { fields }
     }
     default:
-      return json({ error: 'Unknown intent' }, { status: 400 })
+      return { error: 'Unknown intent' }
   }
 }
 

@@ -1,6 +1,5 @@
 import { Box, Button, Card, CardActions, CardContent, Grid, Typography } from '@mui/material'
 import type { MetaFunction } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 
 import { getPublishedForms } from '~/models/forms.server'
@@ -9,7 +8,7 @@ export const meta: MetaFunction = () => [{ title: 'Forms — Form Builder' }]
 
 export async function loader() {
   const forms = await getPublishedForms()
-  return json({ forms })
+  return { forms }
 }
 
 export default function PublicIndex() {

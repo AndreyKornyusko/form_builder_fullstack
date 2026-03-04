@@ -20,7 +20,6 @@ import {
   Typography,
 } from '@mui/material'
 import type { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import { Link, useFetcher, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 
@@ -30,7 +29,7 @@ import { requireUserId } from '~/utils/session.server'
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireUserId(request)
   const forms = await listForms()
-  return json({ forms })
+  return { forms }
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -45,7 +44,7 @@ export async function action({ request }: ActionFunctionArgs) {
     await publishForm(formId)
   }
 
-  return json({ ok: true })
+  return { ok: true }
 }
 
 export default function AdminIndex() {

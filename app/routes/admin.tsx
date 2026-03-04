@@ -1,13 +1,12 @@
 import { AppBar, Box, Button, Toolbar, Typography } from '@mui/material'
 import type { LoaderFunctionArgs } from '@remix-run/node'
-import { json } from '@remix-run/node'
 import { Form, Outlet } from '@remix-run/react'
 
 import { requireUserId } from '~/utils/session.server'
 
 export async function loader({ request }: LoaderFunctionArgs) {
   await requireUserId(request)
-  return json({})
+  return {}
 }
 
 export default function AdminLayout() {
