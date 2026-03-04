@@ -9,9 +9,7 @@ import {
   isRouteErrorResponse,
   useRouteError,
 } from '@remix-run/react'
-import { useContext } from 'react'
 
-import { EmotionStylesContext } from '~/utils/emotion-styles-context'
 import theme from '~/utils/theme'
 
 export const links: LinksFunction = () => [
@@ -24,8 +22,6 @@ export const links: LinksFunction = () => [
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const emotionStyles = useContext(EmotionStylesContext)
-
   return (
     <html lang="en">
       <head>
@@ -33,14 +29,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        {emotionStyles.map(({ key, ids, css }) => (
-          <style
-            key={key}
-            data-emotion={`${key} ${ids.join(' ')}`}
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: css }}
-          />
-        ))}
+        {/* Anchor for emotion styles injected by entry.server.tsx (SSR)
+            and created by the client cache on the browser side */}
+        <meta name="emotion-insertion-point" content="" />
       </head>
       <body>
         {children}
@@ -64,9 +55,9 @@ export function ErrorBoundary() {
   const error = useRouteError()
 
   return (
-    <html lang="uk">
+    <html lang="en">
       <head>
-        <title>Помилка!</title>
+        <title>Error!</title>
         <Meta />
         <Links />
       </head>
@@ -74,7 +65,7 @@ export function ErrorBoundary() {
         <h1>
           {isRouteErrorResponse(error)
             ? `${error.status} ${error.statusText}`
-            : 'Сталася неочікувана помилка'}
+            : 'An unexpected error occurred'}
         </h1>
         <Scripts />
       </body>

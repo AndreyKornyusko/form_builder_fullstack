@@ -15,13 +15,14 @@ You (developer)
     ▼
 Main agent (orchestrator)
     │
-    ├──► db-agent          (schema, models)
-    ├──► backend-agent     (routes, services)
-    ├──► frontend-agent    (components, UI)
-    ├──► spec-checker      (compliance check)
-    ├──► backend-reviewer  (code review)
-    ├──► frontend-reviewer (code review)
-    └──► test-writer       (tests)
+    ├──► db-agent           (schema, models)
+    ├──► backend-agent      (routes, services)
+    ├──► frontend-agent     (components, UI)
+    ├──► spec-checker       (compliance check)
+    ├──► backend-reviewer   (code review)
+    ├──► frontend-reviewer  (code review)
+    ├──► security-reviewer  (OWASP security audit)
+    └──► test-writer        (tests)
 ```
 
 **Key property:** every subagent has an **isolated context**. It does not see your conversation with the main agent. It only receives what the orchestrator explicitly passes in its prompt.
@@ -39,6 +40,7 @@ Main agent (orchestrator)
     spec-checker.md          — spec compliance verification
     backend-reviewer.md      — backend code review
     frontend-reviewer.md     — frontend code review
+    security-reviewer.md     — OWASP security audit (full-stack)
     test-writer.md           — test writing
 
   commands/                  ← slash command templates for the orchestrator
@@ -46,6 +48,7 @@ Main agent (orchestrator)
     review-spec.md           — /review-spec
     review-backend.md        — /review-backend
     review-frontend.md       — /review-frontend
+    review-security.md       — /review-security
     write-tests.md           — /write-tests
     run-checks.md            — /run-checks
 
@@ -88,6 +91,7 @@ specs/                       ← feature specifications (source of truth)
 | `spec-checker` | Spec compliance | Code quality |
 | `backend-reviewer` | Auth, validation, layers, security | JSX, components |
 | `frontend-reviewer` | MUI, SSR, hooks, types | loader/action |
+| `security-reviewer` | OWASP Top 10 across full stack | Code architecture, style |
 
 ### Reviewer Isolation Rule
 Reviewer agents **never fix** issues they find. They only report. The main agent (orchestrator) decides what to fix.
@@ -145,6 +149,29 @@ Code review of frontend code.
 
 Spawns `frontend-reviewer` subagent. Returns a 🔴 / 🟡 / 🔵 report.
 
+### `/review-security [file or directory or --full]`
+Full-stack security audit against OWASP Top 10.
+
+```bash
+/review-security                          # all files changed since last commit
+/review-security app/routes/admin.tsx     # specific file
+/review-security app/services/            # specific directory
+/review-security --full                   # entire codebase
+```
+
+**What happens:**
+1. Collect target files (changed files, specific path, or full codebase)
+2. Always include `app/utils/session.server.ts` + `.env.example`
+3. `security-reviewer` → checks OWASP A01–A10 across all layers
+4. Returns 🔴 BLOCKED / 🔴 Errors / 🟡 Warnings / 🔵 Suggestions report with OWASP refs
+5. Fix all 🔴 findings → re-run `/review-security` to confirm
+
+**Severity:**
+- 🔴 BLOCKED — auth hole, data breach risk, secret exposure → do not ship
+- 🔴 Error — must fix before merge
+- 🟡 Warning — should fix (hardening, info leakage risk)
+- 🔵 Suggestion — optional improvement
+
 ### `/write-tests <file>`
 Write Vitest tests for a specific file.
 
@@ -178,13 +205,16 @@ Does not spawn agents — runs directly.
 2. /review-spec 02-forms-crud
    → final compliance check
 
-3. /write-tests app/services/forms.server.ts
+3. /review-security
+   → security audit of all changed files
+
+4. /write-tests app/services/forms.server.ts
    → tests for critical services
 
-4. /run-checks
+5. /run-checks
    → final quality gate
 
-5. git push origin main
+6. git push origin main
 ```
 
 ### Reviewing existing code
@@ -274,5 +304,17 @@ Agents where one **depends on the output** of another — run sequentially.
 🟡 Warning    — should fix (bad pattern, potential bug)
 🔵 Suggestion — optional improvement
 ```
+
+**Overall:** `PASS` / `NEEDS WORK` / `BLOCKED`
+
+### security-reviewer
+```
+🔴 BLOCKED    — critical security hole — do not ship (auth bypass, secret exposure, injection)
+🔴 Error      — must fix before merge (misconfigured session, data leakage)
+🟡 Warning    — should fix (hardening gaps, info leakage risk)
+🔵 Suggestion — optional improvement (rate limiting notes, cache headers)
+```
+
+Each finding includes: **OWASP category** (A01–A10), **file + line**, **impact**, **concrete fix**.
 
 **Overall:** `PASS` / `NEEDS WORK` / `BLOCKED`

@@ -5,7 +5,6 @@ import { RemixServer } from '@remix-run/react'
 import { renderToString } from 'react-dom/server'
 
 import createEmotionCache from '~/utils/create-emotion-cache'
-import { EmotionStylesContext } from '~/utils/emotion-styles-context'
 
 export default function handleRequest(
   request: Request,
@@ -15,33 +14,28 @@ export default function handleRequest(
   _loadContext: AppLoadContext
 ) {
   const cache = createEmotionCache()
-  const { extractCriticalToChunks } = createEmotionServer(cache)
+  const { extractCriticalToChunks, constructStyleTagsFromChunks } = createEmotionServer(cache)
 
-  // Pass 1: render to collect which emotion styles are used
-  const pass1Html = renderToString(
-    <EmotionStylesContext.Provider value={[]}>
-      <CacheProvider value={cache}>
-        <RemixServer context={remixContext} url={request.url} />
-      </CacheProvider>
-    </EmotionStylesContext.Provider>
+  const html = renderToString(
+    <CacheProvider value={cache}>
+      <RemixServer context={remixContext} url={request.url} />
+    </CacheProvider>
   )
 
-  const { styles } = extractCriticalToChunks(pass1Html)
-  const emotionStyles = styles.filter((s) => s.css)
+  const chunks = extractCriticalToChunks(html)
+  const styleTags = constructStyleTagsFromChunks(chunks)
 
-  // Pass 2: render again with styles in context so Layout renders them as
-  // <style> elements — part of React's virtual DOM, no hydration mismatch
-  const html = renderToString(
-    <EmotionStylesContext.Provider value={emotionStyles}>
-      <CacheProvider value={cache}>
-        <RemixServer context={remixContext} url={request.url} />
-      </CacheProvider>
-    </EmotionStylesContext.Provider>
+  // Inject emotion style tags directly into the HTML string right after the
+  // insertion-point meta element. These are NOT React-controlled, so React
+  // won't overwrite them on client-side navigation.
+  const finalHtml = html.replace(
+    '<meta name="emotion-insertion-point" content=""/>',
+    `<meta name="emotion-insertion-point" content=""/>${styleTags}`
   )
 
   responseHeaders.set('Content-Type', 'text/html')
 
-  return new Response(`<!DOCTYPE html>${html}`, {
+  return new Response(`<!DOCTYPE html>${finalHtml}`, {
     status: responseStatusCode,
     headers: responseHeaders,
   })

@@ -126,6 +126,11 @@ Reference these before working on each area:
 See `docs/AGENTS.md` for the full guide on:
 - Which agents exist and what they own
 - All slash commands with examples
-- Recommended workflow (implement → review-spec → tests → checks → commit)
+- Recommended workflow (implement → review-spec → review-security → tests → checks → commit)
 - How agents receive context and their limitations
+
+## Security Agent
+Use `/review-security` after every spec implementation to audit for OWASP Top 10 vulnerabilities.
+The `security-reviewer` agent checks all layers: routes, services, models, utils, components.
+See `.claude/agents/security-reviewer.md` for full scope and report format.
 

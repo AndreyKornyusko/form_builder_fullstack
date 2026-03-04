@@ -1,5 +1,12 @@
 import createCache from '@emotion/cache'
 
 export default function createEmotionCache() {
-  return createCache({ key: 'css', prepend: true })
+  let insertionPoint: HTMLElement | undefined
+
+  if (typeof document !== 'undefined') {
+    const el = document.querySelector<HTMLMetaElement>('meta[name="emotion-insertion-point"]')
+    insertionPoint = el ?? undefined
+  }
+
+  return createCache({ key: 'css', insertionPoint })
 }

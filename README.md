@@ -31,10 +31,18 @@ yarn db:seed
 yarn dev
 ```
 
-Admin: http://localhost:3000/admin  
+Admin: http://localhost:5173/admin  
 Login: `admin@example.com` / `admin123`
 
-Public: http://localhost:3000
+Public: http://localhost:5173
+
+## Agent-Driven Development
+
+This project uses an AI agent architecture for development. Full documentation is in [`docs/AGENTS.md`](docs/AGENTS.md), including:
+- Which agents exist and what they own (`db-agent`, `backend-agent`, `frontend-agent`, reviewers)
+- All slash commands with examples (`/implement-spec`, `/review-spec`, `/review-frontend`, etc.)
+- Recommended workflow: implement → review-spec → tests → checks → commit
+- How agents receive context and their limitations
 
 ## Development with Claude Code
 
