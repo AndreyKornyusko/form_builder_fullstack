@@ -76,3 +76,7 @@ yarn lint         # ESLint
 yarn format       # Prettier
 yarn typecheck    # TypeScript check
 ```
+## Agent chat testing
+
+Type this prompt for checking agent logic
+"Add several different fields with text, number and textarea"

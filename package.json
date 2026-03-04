@@ -1,7 +1,10 @@
 {
   "name": "form-builder",
   "private": true,
-  "sideEffects": ["./app/entry.client.tsx", "./app/root.tsx"],
+  "sideEffects": [
+    "./app/entry.client.tsx",
+    "./app/root.tsx"
+  ],
   "type": "module",
   "scripts": {
     "build": "remix vite:build",
@@ -21,6 +24,8 @@
     "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.13.0",
     "@hello-pangea/dnd": "^17.0.0",
+    "@langchain/core": "^1.1.30",
+    "@langchain/openai": "^1.2.12",
     "@mui/icons-material": "^5.16.7",
     "@mui/material": "^5.16.7",
     "@prisma/client": "^5.22.0",

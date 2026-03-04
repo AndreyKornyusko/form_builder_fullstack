@@ -1,60 +1,95 @@
-import OpenAI from 'openai'
+// LangChain refactor — educational replacement of the direct OpenAI SDK call.
+//
+// Before (direct SDK):
+//   new OpenAI() → client.chat.completions.create() → JSON.parse() → filter()
+//
+// After (LCEL chain):
+//   ChatPromptTemplate → ChatOpenAI → FieldSuggestionParser
+//
+// The public API (FieldSuggestion type + generateFormFields signature) is
+// unchanged — the route admin.forms.$id.generate.tsx requires no modification.
 
-import type { FieldConfig, FieldType } from '~/types/editor'
+import { ChatPromptTemplate } from '@langchain/core/prompts'
+import { RunnableSequence } from '@langchain/core/runnables'
+import { ChatOpenAI } from '@langchain/openai'
 
-export type FieldSuggestion = {
-  type: FieldType
-  config: FieldConfig
+import { FORM_BUILDER_CONTEXT } from '~/services/agent-context'
+import { FieldSuggestionParser } from '~/utils/field-suggestion-parser'
+import type { FieldSuggestion } from '~/utils/field-suggestion-parser'
+import { serializeAgentContext } from '~/utils/serialize-agent-context'
+
+// Re-export so callers (the route) continue to import FieldSuggestion from here
+export type { FieldSuggestion } from '~/utils/field-suggestion-parser'
+
+// ---------------------------------------------------------------------------
+// 1. Prompt template
+//
+// Two message slots:
+//   - system: {context} — the agent's persona, injected from FORM_BUILDER_CONTEXT
+//   - human:  {description} — the user's form description, provided at runtime
+//
+// {context} is filled as a partial variable (known before any request arrives),
+// analogous to currying a function. In production you would call .partial()
+// with a context loaded from DB per user/tenant — the injection point is the
+// same, only the data source changes.
+// ---------------------------------------------------------------------------
+const BASE_PROMPT = ChatPromptTemplate.fromMessages([
+  ['system', '{context}'],
+  ['human', '{description}'],
+])
+
+// ---------------------------------------------------------------------------
+// 2. Output parser
+//
+// FieldSuggestionParser extends BaseOutputParser<FieldSuggestion[]>.
+// It replaces the manual JSON.parse + isValidSuggestion filter from before.
+// The TypeScript generic flows through the chain so chain.invoke() returns
+// Promise<FieldSuggestion[]> with no casting.
+// ---------------------------------------------------------------------------
+const parser = new FieldSuggestionParser()
+
+// ---------------------------------------------------------------------------
+// 3. LCEL chain
+//
+// RunnableSequence.from([a, b, c]) composes three steps:
+//   Step 1 — prompt: formats {context} + {description} into ChatMessages
+//   Step 2 — model:  calls OpenAI, returns an AIMessage
+//   Step 3 — parser: extracts text from AIMessage → JSON.parse → validate
+//
+// This is equivalent to prompt.pipe(model).pipe(parser) — the explicit
+// RunnableSequence form makes the three-step structure visually clear.
+//
+// The chain is built inside the function so that:
+//   a) the apiKey is read lazily at request time (not at module load)
+//   b) the context partial is applied fresh each call — ready for future
+//      per-request context injection (e.g. user-specific agent personas)
+// ---------------------------------------------------------------------------
+async function buildChain(apiKey: string) {
+  // Apply the mock context as a partial variable.
+  // .partial() returns a new prompt with {context} pre-filled;
+  // chain.invoke() then only needs { description }.
+  const prompt = await BASE_PROMPT.partial({
+    context: serializeAgentContext(FORM_BUILDER_CONTEXT),
+  })
+
+  const model = new ChatOpenAI({
+    model: 'gpt-4o-mini',
+    apiKey,
+    maxTokens: 1000,
+  })
+
+  return RunnableSequence.from([prompt, model, parser])
 }
 
-const SYSTEM_PROMPT = `You are a form builder assistant. Given a description of a form, \
-return a JSON array of form fields. Each field must have:
-- type: "text" | "number" | "textarea"
-- config: { label, placeholder?, required?, ...type-specific options }
-  For type "text" or "textarea": minLength?, maxLength?
-  For type "number": min?, max?, step?
-  For type "textarea": rows? (default 4)
-Return ONLY valid JSON array, no markdown, no explanation.`
-
-function isValidSuggestion(f: unknown): f is FieldSuggestion {
-  if (typeof f !== 'object' || f === null) return false
-  const field = f as Record<string, unknown>
-  return (
-    ['text', 'number', 'textarea'].includes(field.type as string) &&
-    typeof field.config === 'object' &&
-    field.config !== null &&
-    typeof (field.config as Record<string, unknown>).label === 'string'
-  )
-}
-
+// ---------------------------------------------------------------------------
+// 4. Public API — same signature as before
+// ---------------------------------------------------------------------------
 export async function generateFormFields(description: string): Promise<FieldSuggestion[]> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) throw new Error('AI not configured')
 
-  const client = new OpenAI({ apiKey })
+  const chain = await buildChain(apiKey)
 
-  const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
-    max_tokens: 1000,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      { role: 'user', content: description },
-    ],
-  })
-
-  const content = response.choices[0]?.message?.content ?? ''
-
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(content)
-  } catch {
-    throw new Error('Failed to parse AI response')
-  }
-
-  if (!Array.isArray(parsed)) throw new Error('Failed to parse AI response')
-
-  const valid = parsed.filter(isValidSuggestion)
-  if (valid.length === 0) throw new Error('AI returned no valid fields')
-
-  return valid
+  // Only {description} is passed — {context} was already applied via .partial()
+  return chain.invoke({ description })
 }
