@@ -5,6 +5,8 @@ import { RemixServer } from '@remix-run/react'
 import { renderToString } from 'react-dom/server'
 
 import createEmotionCache from '~/utils/create-emotion-cache'
+import type { EmotionCriticalChunk } from '~/utils/emotion-styles-context'
+import { EmotionStylesContext } from '~/utils/emotion-styles-context'
 
 export default function handleRequest(
   request: Request,
@@ -14,34 +16,34 @@ export default function handleRequest(
   _loadContext: AppLoadContext
 ) {
   const cache = createEmotionCache()
-  const { extractCriticalToChunks, constructStyleTagsFromChunks } = createEmotionServer(cache)
+  const { extractCriticalToChunks } = createEmotionServer(cache)
 
-  const html = renderToString(
-    <CacheProvider value={cache}>
-      <RemixServer context={remixContext} url={request.url} />
-    </CacheProvider>
+  // Pass 1: render to collect which emotion styles are needed.
+  const pass1Html = renderToString(
+    <EmotionStylesContext.Provider value={[]}>
+      <CacheProvider value={cache}>
+        <RemixServer context={remixContext} url={request.url} />
+      </CacheProvider>
+    </EmotionStylesContext.Provider>
   )
 
-  const chunks = extractCriticalToChunks(html)
-  const styleTags = constructStyleTagsFromChunks(chunks)
+  const chunks = extractCriticalToChunks(pass1Html)
+  const emotionStyles: EmotionCriticalChunk[] = chunks.styles.filter((s) => s.css)
 
-  // Inject emotion style tags directly into the HTML string right after the
-  // insertion-point meta element. These are NOT React-controlled, so React
-  // won't overwrite them on client-side navigation.
-  // Note: React 18 may render void elements with or without self-closing slash,
-  // so we match both variants.
-  const insertionPointPattern =
-    /<meta name="emotion-insertion-point" content=""\s*\/?>/
-  const finalHtml = insertionPointPattern.test(html)
-    ? html.replace(
-        insertionPointPattern,
-        (match) => `${match}${styleTags}`
-      )
-    : html.replace('</head>', `${styleTags}</head>`)
+  // Pass 2: render again with styles in context so Layout renders them as
+  // React <style> elements — they are part of the virtual DOM, so React
+  // keeps them during hydration reconciliation (no FOUC, no mismatch).
+  const html = renderToString(
+    <EmotionStylesContext.Provider value={emotionStyles}>
+      <CacheProvider value={cache}>
+        <RemixServer context={remixContext} url={request.url} />
+      </CacheProvider>
+    </EmotionStylesContext.Provider>
+  )
 
   responseHeaders.set('Content-Type', 'text/html')
 
-  return new Response(`<!DOCTYPE html>${finalHtml}`, {
+  return new Response(`<!DOCTYPE html>${html}`, {
     status: responseStatusCode,
     headers: responseHeaders,
   })

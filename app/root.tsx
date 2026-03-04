@@ -9,7 +9,10 @@ import {
   isRouteErrorResponse,
   useRouteError,
 } from '@remix-run/react'
+import { useContext, useEffect } from 'react'
 
+import { useClientStyle } from '~/utils/client-style-context'
+import { EmotionStylesContext } from '~/utils/emotion-styles-context'
 import theme from '~/utils/theme'
 
 export const links: LinksFunction = () => [
@@ -22,6 +25,8 @@ export const links: LinksFunction = () => [
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const emotionStyles = useContext(EmotionStylesContext)
+
   return (
     <html lang="en">
       <head>
@@ -29,9 +34,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
-        {/* Anchor for emotion styles injected by entry.server.tsx (SSR)
-            and created by the client cache on the browser side */}
-        <meta name="emotion-insertion-point" content="" />
+        {emotionStyles.map(({ key, ids, css }, i) => (
+          <style
+            // eslint-disable-next-line react/no-danger
+            key={`${key}-${i}`}
+            data-emotion={`${key} ${ids.join(' ')}`}
+            dangerouslySetInnerHTML={{ __html: css }}
+          />
+        ))}
       </head>
       <body>
         <ThemeProvider theme={theme}>
@@ -46,6 +56,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const { reset } = useClientStyle()
+
+  // Reset the Emotion cache once after hydration so its <style> element
+  // is created and stable in the DOM before any client-side navigation.
+  // Without this, the element is never created during SSR-hydration
+  // (all styles are already in the SSR <style> tags), and admin-specific
+  // styles fail to inject on the first client-side navigation.
+  useEffect(() => {
+    reset()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   return <Outlet />
 }
 
