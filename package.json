@@ -1,7 +1,7 @@
 {
   "name": "form-builder",
   "private": true,
-  "sideEffects": false,
+  "sideEffects": ["./app/entry.client.tsx", "./app/root.tsx"],
   "type": "module",
   "scripts": {
     "build": "remix vite:build",

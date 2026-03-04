@@ -28,10 +28,16 @@ export default function handleRequest(
   // Inject emotion style tags directly into the HTML string right after the
   // insertion-point meta element. These are NOT React-controlled, so React
   // won't overwrite them on client-side navigation.
-  const finalHtml = html.replace(
-    '<meta name="emotion-insertion-point" content=""/>',
-    `<meta name="emotion-insertion-point" content=""/>${styleTags}`
-  )
+  // Note: React 18 may render void elements with or without self-closing slash,
+  // so we match both variants.
+  const insertionPointPattern =
+    /<meta name="emotion-insertion-point" content=""\s*\/?>/
+  const finalHtml = insertionPointPattern.test(html)
+    ? html.replace(
+        insertionPointPattern,
+        (match) => `${match}${styleTags}`
+      )
+    : html.replace('</head>', `${styleTags}</head>`)
 
   responseHeaders.set('Content-Type', 'text/html')
 

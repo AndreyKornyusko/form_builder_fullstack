@@ -34,7 +34,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="emotion-insertion-point" content="" />
       </head>
       <body>
-        {children}
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </ThemeProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -43,12 +46,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Outlet />
-    </ThemeProvider>
-  )
+  return <Outlet />
 }
 
 export function ErrorBoundary() {
