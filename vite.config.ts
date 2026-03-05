@@ -16,19 +16,11 @@ export default defineConfig(({ command }) => ({
     tsconfigPaths(),
   ],
   ssr: {
-    // Bundle MUI and Emotion so Vite handles ESM→CJS interop.
-    // Without this, Node 22 loads them as ESM at runtime which fails on
-    // directory imports like @mui/utils/formatMuiErrorMessage.
-    //
-    // @babel/runtime is ONLY bundled during build (not dev) because:
-    // - In prod: Rollup transforms CJS helpers (module.exports) correctly.
-    // - In dev: Vite SSR runs in ESM context where `module` is undefined,
-    //   so CJS @babel/runtime helpers crash. In dev they stay external and
-    //   Node loads the ESM helpers (/esm/*.js) natively — this works fine.
-    noExternal: [
-      /@mui\//,
-      /@emotion\//,
-      ...(command === 'build' ? [/@babel\/runtime/] : []),
-    ],
+    // Bundle MUI, Emotion, and @babel/runtime only during production build.
+    // In dev, Vite SSR evaluates modules in an ESM context where CJS `require()`
+    // calls inside bundled packages cause "require is not defined" crashes.
+    // In dev, Node loads these packages directly via their CJS exports — this works fine.
+    // In prod (Koyeb), bundling is required to resolve ESM directory imports.
+    noExternal: command === 'build' ? [/@mui\//, /@emotion\//, /@babel\/runtime/] : [],
   },
 }))
