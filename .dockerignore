@@ -1,0 +1,8 @@
+node_modules
+.git
+build
+.cache
+.env
+.env.*
+*.md
+prisma/migrations
