@@ -24,6 +24,5 @@ export const FORM_BUILDER_CONTEXT = {
     'Return ONLY valid JSON — no markdown, no explanation, no code fences',
     'Every field must have a label string in config',
     'Do not invent field types outside the allowed set',
-    'If the description does not mention any field types (text, number, textarea), respond with exactly this JSON and nothing else: [{"_guidance": "Please mention at least one field type in your description: text, number, or textarea. Example: \\"A contact form with a text field for name and a textarea for message\\""}]',
   ],
 } satisfies AgentContext
