@@ -20,6 +20,8 @@ ENV NODE_ENV=production
 RUN apk add --no-cache openssl
 
 COPY package.json yarn.lock ./
+# Remove "type":"module" so Node.js treats the CJS server bundle as CommonJS
+RUN node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));delete p.type;fs.writeFileSync('package.json',JSON.stringify(p,null,2))"
 RUN yarn install --frozen-lockfile --production && yarn cache clean
 
 # Copy Prisma generated client from builder
