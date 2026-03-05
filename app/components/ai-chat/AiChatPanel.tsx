@@ -37,8 +37,15 @@ interface AiChatPanelProps {
   onAddFields: (fields: EditorField[]) => void
 }
 
+const FIELD_TYPE_KEYWORDS = ['text', 'number', 'textarea']
+
 export function AiChatPanel({ formId, open, onClose, onAddFields }: AiChatPanelProps) {
   const [description, setDescription] = useState('')
+
+  const hasFieldTypeHint = FIELD_TYPE_KEYWORDS.some((kw) =>
+    description.toLowerCase().includes(kw)
+  )
+  const showTypeWarning = description.trim().length > 20 && !hasFieldTypeHint
   const generateFetcher = useFetcher<GenerateResult>()
   const addFetcher = useFetcher<AddResult>()
   const wasAdding = useRef(false)
@@ -117,14 +124,22 @@ export function AiChatPanel({ formId, open, onClose, onAddFields }: AiChatPanelP
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 2, flex: 1, overflow: 'auto' }}>
         <TextField
           label="Describe the form you want to create"
-          placeholder="e.g. A contact form with name, email, phone number and a message field"
+          placeholder="e.g. A registration form with a text field for name, number field for age, and a textarea for bio"
           multiline
           rows={4}
           fullWidth
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           InputLabelProps={{ shrink: true }}
+          helperText="Include at least one field type: text, number, or textarea"
         />
+
+        {showTypeWarning && (
+          <Alert severity="warning" sx={{ py: 0.5 }}>
+            No field types mentioned. Add <strong>text</strong>, <strong>number</strong>, or{' '}
+            <strong>textarea</strong> to get better results.
+          </Alert>
+        )}
 
         <Button
           variant="contained"

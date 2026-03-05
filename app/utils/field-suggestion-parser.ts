@@ -54,6 +54,18 @@ export class FieldSuggestionParser extends BaseOutputParser<FieldSuggestion[]> {
       throw new Error('AI response is not a JSON array')
     }
 
+    // Agent returns [{_guidance: "..."}] when the description lacks field types.
+    // Surface it directly as a user-facing error instead of "no valid fields".
+    const guidance = parsed.find(
+      (item): item is { _guidance: string } =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as Record<string, unknown>)._guidance === 'string'
+    )
+    if (guidance) {
+      throw new Error(guidance._guidance)
+    }
+
     const valid = parsed.filter(isValidSuggestion)
     if (valid.length === 0) {
       throw new Error('AI returned no valid fields')
