@@ -27,6 +27,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/build ./build
 COPY prisma ./prisma
 
-EXPOSE 3000
+ENV PORT=8000
+EXPOSE 8000
 
 CMD ["node_modules/.bin/remix-serve", "build/server/index.js"]
