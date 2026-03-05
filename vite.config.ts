@@ -2,7 +2,7 @@ import { vitePlugin as remix } from '@remix-run/dev'
 import { defineConfig } from 'vite'
 import tsconfigPaths from 'vite-tsconfig-paths'
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     remix({
       serverModuleFormat: 'cjs',
@@ -15,24 +15,20 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
-  resolve: {
-    alias: [
-      // Redirect @babel/runtime ESM helpers to their CJS equivalents.
-      // MUI ESM files import from /helpers/esm/ which are true ES modules.
-      // When Vite bundles MUI as CJS for the server, those become
-      // require('/esm/...') calls that return { default: fn } instead of fn.
-      // The CJS helpers export the function directly via module.exports.
-      {
-        find: /^@babel\/runtime\/helpers\/esm\/(.+)$/,
-        replacement: '@babel/runtime/helpers/$1',
-      },
+  ssr: {
+    // Bundle MUI and Emotion so Vite handles ESM→CJS interop.
+    // Without this, Node 22 loads them as ESM at runtime which fails on
+    // directory imports like @mui/utils/formatMuiErrorMessage.
+    //
+    // @babel/runtime is ONLY bundled during build (not dev) because:
+    // - In prod: Rollup transforms CJS helpers (module.exports) correctly.
+    // - In dev: Vite SSR runs in ESM context where `module` is undefined,
+    //   so CJS @babel/runtime helpers crash. In dev they stay external and
+    //   Node loads the ESM helpers (/esm/*.js) natively — this works fine.
+    noExternal: [
+      /@mui\//,
+      /@emotion\//,
+      ...(command === 'build' ? [/@babel\/runtime/] : []),
     ],
   },
-  ssr: {
-    // Bundle all @mui/* and @emotion/* packages so Vite handles ESM→CJS
-    // transformation at build time. Without this, Node 22 loads them as ESM
-    // at runtime (via require(ESM)), which fails on directory imports like
-    // @mui/utils/formatMuiErrorMessage.
-    noExternal: [/@mui\//, /@emotion\//],
-  },
-})
+}))
