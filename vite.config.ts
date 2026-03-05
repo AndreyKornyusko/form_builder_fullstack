@@ -15,4 +15,20 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  ssr: {
+    // Bundle MUI packages into the server bundle so Vite handles ESM→CJS
+    // transformation at build time. Without this, Node.js loads them as ESM
+    // at runtime and fails on directory imports like @mui/utils/formatMuiErrorMessage.
+    noExternal: [
+      '@mui/material',
+      '@mui/utils',
+      '@mui/icons-material',
+      '@mui/system',
+      '@mui/styled-engine',
+      '@emotion/react',
+      '@emotion/styled',
+      '@emotion/server',
+      '@emotion/cache',
+    ],
+  },
 })
